@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+</head>
+<body>
+    <canvas id="myCanvas" width="500" height="500"></canvas>
+
+    <script>
+        var canvas = document.getElementById("myCanvas");
+        var ctx = canvas.getContext("2d");
+        var myCanvas = document.getElementById("myCanvas")
+
+        function getRandomInt(max) {
+            return Math.floor(Math.random() * max);
+        }
+
+        
+        var drawSegment = function(x, y, color){
+            ctx.beginPath();
+            ctx.arc(x,y,10,0,2*Math.PI);
+            ctx.stroke();
+            ctx.fillStyle = color;
+            ctx.fill();
+        }
+        
+
+        var fillBackground = function(){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            myCanvas.style.backgroundColor = "lightgreen";
+        };
+        
+        var SegmentXs = [100, 100, 100, 100];
+        var SegmentYs = [80, 60, 40, 20];
+        var HeadX = 100;
+        var HeadY = 100;
+            
+        var direction = "D";
+        var UnitsPerMove = 20;
+        var moveSnake = function(){
+            if (direction === "D"){
+                HeadY += UnitsPerMove;
+            }
+            if (direction === "L"){
+                HeadX -= UnitsPerMove;
+            }
+            if (direction === "R"){
+                HeadX += UnitsPerMove;
+            }
+            if (direction === "U"){
+                HeadY -= UnitsPerMove;
+            }
+        }
+
+        var grow = function(){
+            SegmentXs.unshift(HeadX);
+            SegmentYs.unshift(HeadY);
+            moveSnake();
+        }
+
+        var pullTail = function(SegmentXs, SegmentYs){      // Must come BEFORE snakeMove
+            len = SegmentXs.length - 1;
+            for(var i = len ; i >= 1; i = i-1){
+                SegmentXs[i] = SegmentXs[i-1];
+                SegmentYs[i] = SegmentYs[i-1];
+            }
+            SegmentXs[0] = HeadX;
+            SegmentYs[0] = HeadY;
+        }
+        
+        var foodLocationX;
+        var foodLocationY;
+        var spawnFood = function(){
+            foodLocationX = getRandomInt(25) * 20;
+            foodLocationY = getRandomInt(25) * 20;
+        }
+        
+        var CheckCollision = function(sx, sy, fx, fy){
+            return ((sx > fx - 3 && sx < fx + 3) && (sy > fy - 3 && sy < fy + 3))
+        }
+
+        document.addEventListener('keydown', (event) => {
+            var code = event.code;
+            if(code === 'ArrowUp' && direction !== "D"){
+                direction = "U";
+            } else if(code === 'ArrowDown' && direction !== "U"){
+                direction = "D";
+            } else if(code === 'ArrowLeft' && direction !== "R"){
+                direction = "L";
+            } else if(code === 'ArrowRight' && direction !== "L"){
+                direction = "R";
+            }
+            }, false);
+            
+            
+            var ded = false;
+            spawnFood();
+        function myLoop() {
+        setTimeout(function() {
+
+            console.log(HeadX, HeadY);
+            pullTail(SegmentXs, SegmentYs);
+            moveSnake();
+
+            fillBackground();   
+            drawSegment(foodLocationX, foodLocationY, "rgb(200, 0, 0)");
+            
+            drawSegment(HeadX, HeadY, "rgb(0, 200, 150)")
+            for (let i = 0; i < SegmentXs.length; i++){
+                drawSegment(SegmentXs[i], SegmentYs[i], "rgb(0, 240, 150)");
+            }
+            
+            if (CheckCollision(HeadX, HeadY, foodLocationX, foodLocationY)){
+                grow();
+                spawnFood();
+            }
+
+            for(var i=0; i < SegmentXs.length; i++){
+                if (CheckCollision(HeadX, HeadY, SegmentXs[i], SegmentYs[i])){
+                    ded = true;
+                }
+            }
+
+            if (HeadX > 500 || HeadX < 0|| HeadY > 500 || HeadY < 0 || ded) {
+                UnitsPerMove = 0;
+
+                myCanvas.style.backgroundColor = "black";
+                ctx.fillStyle = "blue";
+                ctx.font = "bold 70px Arial";
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText("Game Over", (canvas.width / 2), (canvas.height / 2));
+
+            } else{
+                myLoop();
+            }
+            
+        }, 200)
+        }
+        myLoop(); 
+
+    
+    </script>
+    
+</body>
+</html>     
